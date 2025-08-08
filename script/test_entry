@@ -1,1 +1,6 @@
-/sys/fs/cgroup/cognition_container /data/memory-offloading/script/cognition_vlm_a.conf
+/sys/fs/cgroup/system.slice/planning_group /data/memory-offloading/script/planning_group.conf
+/sys/fs/cgroup/system.slice/datarec_group /data/memory-offloading/script/datarec_group.conf
+/sys/fs/cgroup/system.slice/env_container_group /data/memory-offloading/script/env_container_group.conf
+/sys/fs/cgroup/system.slice/vla_parking_group /data/memory-offloading/script/vla_parking_group.conf
+/sys/fs/cgroup/system.slice/realtime_container_group /data/memory-offloading/script/realtime_container_group.conf
+/sys/fs/cgroup/system.slice/vla_arch_group /data/memory-offloading/script/vla_arch_group.conf

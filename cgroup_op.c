@@ -120,6 +120,44 @@ float get_psi_some(const char *cgroup_path, long interval)
 	return some_total;
 }
 
+// Get reclaim  statistics from the memory.stat file
+long get_reclaim_stat(const char *cgroup_path)
+{
+	FILE *stat_file;
+	long pgsteal = 0;
+
+	memset(fullpath, 0, FULL_PATH_SIZE * sizeof(char));
+	memset(read_buffer, 0,  READ_BUFFER_SIZE * sizeof(char));
+
+	// Construct the full path to the memory.stat file
+	snprintf(fullpath, sizeof(fullpath), "%s/memory.stat", cgroup_path);
+
+	// Open the memory.stat file
+	stat_file = fopen(fullpath, "r");
+	if (stat_file == NULL) {
+		LOG_ERROR("can not open %s: %s\n", fullpath, strerror(errno));
+		return -1;
+	}
+
+	// Read the memory.stat file line by line
+	while (fgets(read_buffer, sizeof(read_buffer), stat_file) != NULL) {
+		char key[128];
+		unsigned long long value;
+
+		// Parse each line in the format "key value"
+		if (sscanf(read_buffer, "%127s %llu", key, &value) == 2) {
+			if (strcmp(key, "pgsteal") == 0)
+				pgsteal = (long)value;
+		} else {
+			LOG_ERROR("can not parse %s", read_buffer);
+		}
+	}
+
+	fclose(stat_file);
+	return pgsteal;
+}
+
+
 // Get key memory statistics from the memory.stat file
 int get_key_memory_stat(const char *cgroup_path, struct key_memory_stat *key_mem_stat)
 {

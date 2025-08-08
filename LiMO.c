@@ -15,6 +15,9 @@
 #include "parse_config.h"
 
 #define PAGE_ALIGN_MASK						(~4095)		// 4k page size align
+#define PAGE_SHIFT						(12)		// 4k page size shift
+#define RECLAIM_ACC_TRUNCATION					0.5
+#define SCAN_EFF_TRUNCATION					0.1
 
 #define min(x, y) ({						\
 	typeof(x) _x = (x);					\
@@ -106,8 +109,8 @@ static long refault_advice(unsigned long off_load_size, struct config *config)
 		return off_load_size;
 	}
 
-	if (reclaim_accuracy_ratio < 0.5
-		|| reclaim_scan_efficiency_ratio < 0.1) {
+	if (reclaim_accuracy_ratio < RECLAIM_ACC_TRUNCATION
+		|| reclaim_scan_efficiency_ratio < SCAN_EFF_TRUNCATION) {
 		// Decrease offloading size if detecting the reclaim accuracy or scan efficiency is below the targets
 		LOG_DEBUG("return 0 !!! reclaim_accuracy_ratio %.2f reclaim_scan_efficiency_ratio %.2f pgscanDelta %ld pgstealDelta %ld refaultDelta %ld\n",
 			reclaim_accuracy_ratio, reclaim_scan_efficiency_ratio, pgscanDelta, pgstealDelta, refaultDelta);
@@ -127,22 +130,39 @@ static long refault_advice(unsigned long off_load_size, struct config *config)
 	return off_load_size;
 }
 
+static void check_zram(void)
+{
+	const char *path = "/sys/block/zram0";
+
+	if (access(path, F_OK)) {
+		LOG_ERROR("Failed to check_zram\n");
+		exit(EXIT_FAILURE);;
+	}
+}
+
+static long init_reclaim_mem = 0;
 
 int main(int argc, char *argv[])
 {
 	struct config *config = get_sys_config();
-	long reclaim_mem = 0;
+	long init_reclaim_mem = 0;
 	long current_mem = 0;
+	long reclaim_mem = 0;
+	long reclaim_threshold = 0;
 	float psi_some;
+
+	check_zram();
 
 	// Parse command line arguments
 	parse_args(argc, argv);
 	print_config(config);
 
-
 	// Set up signal handling
 	signal(SIGINT, handle_sigint);
 	signal(SIGTERM, handle_sigint);
+
+//	init_reclaim_mem = get_reclaim_stat(config->cgroup_path);
+	reclaim_threshold = config->reclaim_size >> PAGE_SHIFT;
 
 	// Main loop
 	while (!stop) {
@@ -153,9 +173,19 @@ int main(int argc, char *argv[])
 			LOG_ERROR("Failed to obtain the current memory usage\n");
 			break;
 		}
-
 		if (current_mem < config->min_size)
 			goto SLEEP;
+
+		reclaim_mem = get_reclaim_stat(config->cgroup_path);
+		if (reclaim_mem < 0 || reclaim_mem < init_reclaim_mem) {
+			LOG_ERROR("Failed to obtain the current reclaim usage\n");
+			break;
+		}
+		LOG_ERROR("reclaim_mem %ld init_reclaim_mem %ld\n", reclaim_mem, init_reclaim_mem);
+		if (reclaim_mem - init_reclaim_mem >= reclaim_threshold) {
+			LOG_INFO("Reach the reclaim_mem threshold %ld reclaim_mem %ld\n", reclaim_threshold, reclaim_mem);
+			goto SLEEP;
+		}
 
 		psi_some = get_psi_some(config->cgroup_path, config->interval);
 		if (psi_some < 0.0) {

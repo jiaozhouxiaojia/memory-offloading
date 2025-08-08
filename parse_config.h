@@ -14,6 +14,7 @@ struct config {
 	float reclaim_accuracy_ratio;		// Reclaim accuracy ratio, between 0 and 1
 	float reclaim_scan_efficiency_ratio;	// Reclaim scan efficiency ratio, between 0 and 1
 	long min_size;				// Minimum memory limit, in bytes
+	long reclaim_size;			// Reclaim memory limit, in bytes
 	long iterate_max_size;			// Single iterate maximum memory limit, in bytes
 	long iterate_min_size;			// Single iterate minmum memory limit, in bytes
 	long interval;				// Sampling interval, in seconds
