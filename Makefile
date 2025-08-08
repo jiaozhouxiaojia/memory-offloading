@@ -1,6 +1,6 @@
 # Define the compiler
-CC = gcc
-#CC = aarch64-linux-gnu-gcc
+#CC = gcc
+CC = aarch64-linux-gnu-gcc
 
 # Define compilation options, such as debug information and warnings
 CFLAGS = -Wall -g

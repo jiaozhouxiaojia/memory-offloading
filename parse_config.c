@@ -24,6 +24,7 @@ static struct config config = {
 	.reclaim_accuracy_ratio = 0.9,
 	.reclaim_scan_efficiency_ratio = 0.3,
 	.min_size = (10 << 20),			// 20M
+	.reclaim_size = (10 << 20),		// 20M
 	.iterate_max_size = (50 << 20),		// 50M
 	.iterate_min_size = (1 << 20),		// 1M
 	.interval = 5,
@@ -127,6 +128,8 @@ static int read_config(const char *filename, struct config *config)
 				config->reclaim_ratio = atof(trimmed_value);
 			} else if (strcmp(trimmed_key, "MIN_SIZE") == 0) {
 				config->min_size = memparse(trimmed_value, &trimmed_value);
+			} else if (strcmp(trimmed_key, "RECLAIM_SIZE") == 0) {
+				config->reclaim_size = memparse(trimmed_value, &trimmed_value);
 			} else if (strcmp(trimmed_key, "ITERATE_MAX_SIZE") == 0) {
 				config->iterate_max_size = memparse(trimmed_value, &trimmed_value);
 			} else if (strcmp(trimmed_key, "ITERATE_MIN_SIZE") == 0) {
@@ -166,6 +169,7 @@ void print_config(const struct config *config)
 	printf("  reclaim_accuracy_ratio %.2f\n", config->reclaim_accuracy_ratio);
 	printf("  reclaim_scan_efficiency_ratio %.2f\n", config->reclaim_scan_efficiency_ratio);
 	printf("  min_size %ld\n", config->min_size);
+	printf("  reclaim_size %ld\n", config->reclaim_size);
 	printf("  iterate_max_size %ld\n", config->iterate_max_size);
 	printf("  iterate_min_size %ld\n", config->iterate_min_size);
 	printf("  interval %ld\n", config->interval);

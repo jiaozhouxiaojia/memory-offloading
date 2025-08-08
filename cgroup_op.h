@@ -85,6 +85,7 @@ struct memory_stat {
 	unsigned long long thp_collapse_alloc;
 };
 
+long get_reclaim_stat(const char *cgroup_path);
 long get_current_memory(const char *cgroup_path);
 float get_psi_some(const char *cgroup_path, long interval);
 int get_key_memory_stat(const char *cgroup_path, struct key_memory_stat *key_mem_stat);

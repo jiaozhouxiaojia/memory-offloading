@@ -1,1 +1,1 @@
-/sys/fs/cgroup/cognition_container /data/memory-offloading/script/cognition_vlm_a.conf
+/sys/fs/cgroup/park_vlm/ /data/memory-offloading/script/park_vlm.conf
